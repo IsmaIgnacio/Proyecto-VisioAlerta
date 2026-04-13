@@ -1,30 +1,34 @@
-// Pines del sensor ultrasónico
-const int trigPin = 9;
-const int echoPin = 10;
-const int motorPin = 3; // Pin PWM para el motor vibrador
+// Pines actualizados para ESP32
+const int trigPin = 4;   // Tu D5
+const int echoPin = 18;  // Tu D18 (donde están las resistencias)
+const int motorPin = 25; // Tu D25 (donde está el motor)
 
 long duration;
 int distanceCm;
 
-// Definición de los umbrales de distancia (en cm)
-const int NIVEL1 = 120; // Distancia máxima para nivel 1 (lejano)
-const int NIVEL2 = 90;  // Distancia máxima para nivel 2
-const int NIVEL3 = 60;  // Distancia máxima para nivel 3
-const int NIVEL4 = 30;  // Distancia máxima para nivel 4  
-const int NIVEL5 = 10;  // Distancia máxima para nivel 5 (cercano)
+// Umbrales de distancia
+const int NIVEL1 = 130; 
+const int NIVEL2 = 105;  
+const int NIVEL3 = 80;  
+const int NIVEL4 = 50;  
+const int NIVEL5 = 20;  
 
-// Intensidades del motor (0-255)
-const int INTENSIDAD1 = 25;   // Nivel 1: vibración suave
-const int INTENSIDAD2 = 50;   // Nivel 2: vibración baja-media
-const int INTENSIDAD3 = 100;  // Nivel 3: vibración media
-const int INTENSIDAD4 = 150;  // Nivel 4: vibración media-alta
-const int INTENSIDAD5 = 200;  // Nivel 5: vibración máxima
+// Intensidades 
+const int INTENSIDAD1 = 80; 
+const int INTENSIDAD2 = 100; 
+const int INTENSIDAD3 = 130;
+const int INTENSIDAD4 = 170;
+const int INTENSIDAD5 = 220;
 
 void setup() {
-    Serial.begin(9600);
+    // El ESP32 funciona mejor a 115200 baudios
+    Serial.begin(115200); 
+    
     pinMode(trigPin, OUTPUT);
     pinMode(echoPin, INPUT);
     pinMode(motorPin, OUTPUT);
+    
+    Serial.println("VisioAlerta ESP32 Iniciado...");
 }
 
 void loop() {
@@ -41,41 +45,41 @@ void loop() {
     // Calcular distancia en cm
     distanceCm = duration * 0.034 / 2;
 
+    // Monitor Serial
     Serial.print("Distancia: ");
     Serial.print(distanceCm);
-    Serial.println(" cm");
+    Serial.print(" cm -> ");
 
-    // Control del motor vibrador con 5 niveles de intensidad
-    if (distanceCm > 0) { // Solo si hay una lectura válida
-        if (distanceCm <= NIVEL5) { // Menos de 10 cm
+    // Control del motor
+    if (distanceCm > 0 && distanceCm < 400) { 
+        if (distanceCm <= NIVEL5) {
             analogWrite(motorPin, INTENSIDAD5);
-            Serial.println("Nivel 5: Muy cerca - Vibración máxima");
+            Serial.println("Nivel 5: Máximo");
         } 
-        else if (distanceCm <= NIVEL4) { // Entre 10 y 30 cm
+        else if (distanceCm <= NIVEL4) {
             analogWrite(motorPin, INTENSIDAD4);
-            Serial.println("Nivel 4: Cerca - Vibración alta");
+            Serial.println("Nivel 4: Alto");
         }
-        else if (distanceCm <= NIVEL3) { // Entre 30 y 60 cm
+        else if (distanceCm <= NIVEL3) {
             analogWrite(motorPin, INTENSIDAD3);
-            Serial.println("Nivel 3: Distancia media - Vibración media");
+            Serial.println("Nivel 3: Medio");
         }
-        else if (distanceCm <= NIVEL2) { // Entre 60 y 90 cm
+        else if (distanceCm <= NIVEL2) {
             analogWrite(motorPin, INTENSIDAD2);
-            Serial.println("Nivel 2: Algo lejos - Vibración baja");
+            Serial.println("Nivel 2: Bajo");
         }
-        else if (distanceCm <= NIVEL1) { // Entre 90 y 120 cm
+        else if (distanceCm <= NIVEL1) {
             analogWrite(motorPin, INTENSIDAD1);
-            Serial.println("Nivel 1: Lejos - Vibración suave");
+            Serial.println("Nivel 1: Suave");
         }
-        else { // Más de 120 cm
+        else {
             analogWrite(motorPin, 0);
-            Serial.println("Fuera de rango - Motor apagado");
+            Serial.println("Fuera de rango");
         }
     } else {
-        // Lectura inválida (distancia = 0)
         analogWrite(motorPin, 0);
-        Serial.println("Error en lectura - Motor apagado");
+        Serial.println("Error de lectura");
     }
 
-    delay(100); // Pequeña pausa para estabilidad
+    delay(200); // Un poco más de tiempo para que el motor alcance a reaccionar
 }
